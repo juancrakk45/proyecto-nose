@@ -63,3 +63,14 @@ export const loginUsuario = async (req, res) => {
     res.status(500).json({ mensaje: 'Error al iniciar sesión', error: error.message });
   }
 };
+
+// 📋 Listar usuarios (solo para pruebas o administración)
+export const listarUsuarios = async (req, res) => {
+  try {
+    const usuarios = await Usuario.find().select('-password'); // sin contraseñas
+    res.json(usuarios);
+  } catch (error) {
+    res.status(500).json({ mensaje: 'Error al obtener los usuarios', error: error.message });
+  }
+};
+
