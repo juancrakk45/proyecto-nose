@@ -6,6 +6,11 @@ export default function Tareas() {
   const [descripcion, setDescripcion] = useState("");
   const [mensaje, setMensaje] = useState("");
 
+  // --- Nuevos estados para edición ---
+  const [editingId, setEditingId] = useState(null);
+  const [editarTitulo, setEditarTitulo] = useState("");
+  const [editarDescripcion, setEditarDescripcion] = useState("");
+
   // 🔹 Cargar tareas desde el backend
   useEffect(() => {
     const fetchTareas = async () => {
@@ -18,16 +23,30 @@ export default function Tareas() {
 
         const res = await fetch("http://localhost:5000/api/tareas", {
           headers: {
-            "Authorization": `Bearer ${token}`, // ✅ enviamos token
+            "Authorization": `Bearer ${token}`,
           },
         });
 
-        if (!res.ok) throw new Error("Error en la solicitud");
+        if (!res.ok) {
+          // Intenta obtener el mensaje del backend si existe
+          let msg = "Error en la solicitud";
+          try {
+            const errorData = await res.json();
+            if (errorData && errorData.mensaje) msg = errorData.mensaje;
+          } catch {}
+          // Si el error es de autenticación, borra el token y muestra mensaje especial
+          if (res.status === 401) {
+            localStorage.removeItem("token");
+            setMensaje("⚠️ Tu sesión expiró. Por favor inicia sesión nuevamente.");
+            return;
+          }
+          throw new Error(msg + ` (status: ${res.status})`);
+        }
         const data = await res.json();
         setTareas(data);
       } catch (error) {
         console.error("Error al cargar tareas:", error);
-        setMensaje("❌ No se pudieron cargar las tareas 😔");
+        setMensaje(`❌ ${error.message}`);
       }
     };
     fetchTareas();
@@ -99,6 +118,52 @@ export default function Tareas() {
     }
   };
 
+  // Iniciar edición para una tarea
+  const iniciarEdicion = (t) => {
+    setEditingId(t._id);
+    setEditarTitulo(t.titulo || "");
+    setEditarDescripcion(t.descripcion || "");
+    setMensaje("");
+  };
+
+  const cancelarEdicion = () => {
+    setEditingId(null);
+    setEditarTitulo("");
+    setEditarDescripcion("");
+  };
+
+  // Guardar edición (PUT)
+  const guardarEdicion = async (id) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setMensaje("⚠️ Debes iniciar sesión para editar tareas.");
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5000/api/tareas/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ titulo: editarTitulo, descripcion: editarDescripcion }),
+      });
+
+      if (!res.ok) {
+        setMensaje("❌ Error al actualizar la tarea");
+        return;
+      }
+
+      const actualizada = await res.json();
+      setTareas(tareas.map((t) => (t._id === id ? actualizada : t)));
+      setMensaje("✏️ Tarea actualizada correctamente");
+      cancelarEdicion();
+    } catch (error) {
+      console.error("Error al actualizar tarea:", error);
+      setMensaje("⚠️ Error al conectar con el servidor");
+    }
+  };
+
   return (
     <div className="contenedor">
       <h1>📝 Gestor de Tareas</h1>
@@ -124,11 +189,46 @@ export default function Tareas() {
         {tareas.length > 0 ? (
           tareas.map((t) => (
             <li key={t._id} className="tarea">
-              <div>
-                <h3>{t.titulo}</h3>
-                <p>{t.descripcion}</p>
+              <div className="contenido">
+                {editingId === t._id ? (
+                  <>
+                    <input
+                      type="text"
+                      value={editarTitulo}
+                      onChange={(e) => setEditarTitulo(e.target.value)}
+                    />
+                    <textarea
+                      value={editarDescripcion}
+                      onChange={(e) => setEditarDescripcion(e.target.value)}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <h3>{t.titulo}</h3>
+                    <p>{t.descripcion}</p>
+                  </>
+                )}
               </div>
-              <button onClick={() => eliminarTarea(t._id)}>Eliminar</button>
+
+              <div className="acciones">
+                {editingId === t._id ? (
+                  <>
+                    <button className="guardar" onClick={() => guardarEdicion(t._id)}>
+                      Guardar
+                    </button>
+                    <button className="cancelar" onClick={cancelarEdicion}>
+                      Cancelar
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className="editar" onClick={() => iniciarEdicion(t)}>
+                      Editar
+                    </button>
+                    <button onClick={() => eliminarTarea(t._id)}>Eliminar</button>
+                  </>
+                )}
+              </div>
             </li>
           ))
         ) : (
@@ -159,6 +259,7 @@ export default function Tareas() {
           margin-bottom: 25px;
         }
 
+        /* Ajustes: aplicar box-sizing y un estilo consistente a input y textarea */
         input,
         textarea {
           width: 100%;
@@ -166,6 +267,16 @@ export default function Tareas() {
           border: 1px solid #ccc;
           border-radius: 5px;
           font-size: 16px;
+          box-sizing: border-box; /* evita desalineos causados por padding/borde */
+        }
+
+        /* Específico para textarea: quitar la manija de redimensión y mejorar el comportamiento */
+        textarea {
+          resize: none;            /* quita las "rallitas" de redimensionamiento */
+          min-height: 100px;      /* altura inicial agradable */
+          line-height: 1.4;
+          overflow: auto;         /* muestra scroll interno si se sobrepasa el contenido */
+          -webkit-appearance: none;
         }
 
         button {
@@ -191,12 +302,17 @@ export default function Tareas() {
         .tarea {
           display: flex;
           justify-content: space-between;
-          align-items: center;
+          align-items: flex-start;
           background: white;
           padding: 15px;
           border-radius: 5px;
           margin-bottom: 10px;
           border: 1px solid #ddd;
+        }
+
+        .contenido {
+          flex: 1;
+          margin-right: 10px;
         }
 
         .tarea h3 {
@@ -208,6 +324,39 @@ export default function Tareas() {
           margin: 5px 0 0;
           color: #666;
           font-size: 14px;
+        }
+
+        .acciones {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+
+        .acciones button {
+          padding: 6px 10px;
+          border-radius: 4px;
+          border: none;
+          cursor: pointer;
+          font-size: 14px;
+        }
+
+        .acciones .editar {
+          background: #ffc107;
+          color: #1a1a1a;
+        }
+
+        .acciones .guardar {
+          background: #28a745;
+          color: white;
+        }
+
+        .acciones .cancelar {
+          background: #6c757d;
+          color: white;
+        }
+
+        .acciones button:hover {
+          opacity: 0.9;
         }
 
         .mensaje {

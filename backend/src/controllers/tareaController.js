@@ -4,15 +4,18 @@ import Tarea from "../models/Tarea.js";
 export const crearTarea = async (req, res) => {
   try {
     const { titulo, descripcion } = req.body;
+    if (!titulo || !titulo.trim()) {
+      return res.status(400).json({ mensaje: "El título es obligatorio" });
+    }
     const nuevaTarea = new Tarea({
       titulo,
-      descripcion,
+      descripcion: descripcion || "",
       usuario: req.usuario.id,
     });
     await nuevaTarea.save();
     res.status(201).json(nuevaTarea);
   } catch (error) {
-    res.status(500).json({ mensaje: "Error al crear tarea", error });
+    res.status(500).json({ mensaje: "Error al crear tarea" });
   }
 };
 
@@ -22,7 +25,7 @@ export const obtenerTareas = async (req, res) => {
     const tareas = await Tarea.find({ usuario: req.usuario.id });
     res.json(tareas);
   } catch (error) {
-    res.status(500).json({ mensaje: "Error al obtener tareas", error });
+    res.status(500).json({ mensaje: "Error al obtener tareas" });
   }
 };
 
@@ -44,7 +47,7 @@ export const actualizarTarea = async (req, res) => {
     const tareaActualizada = await tarea.save();
     res.json(tareaActualizada);
   } catch (error) {
-    res.status(500).json({ mensaje: "Error al actualizar tarea", error });
+    res.status(500).json({ mensaje: "Error al actualizar tarea" });
   }
 };
 
@@ -61,6 +64,6 @@ export const eliminarTarea = async (req, res) => {
     await tarea.deleteOne();
     res.json({ mensaje: "Tarea eliminada correctamente" });
   } catch (error) {
-    res.status(500).json({ mensaje: "Error al eliminar tarea", error });
+    res.status(500).json({ mensaje: "Error al eliminar tarea" });
   }
 };
