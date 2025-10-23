@@ -21,7 +21,7 @@ export default function Tareas() {
           return;
         }
 
-        const res = await fetch("http://localhost:5000/api/tareas", {
+        const res = await fetch("https://proyecto-nose-backend.onrender.com/api/tareas", {
           headers: {
             "Authorization": `Bearer ${token}`,
           },
@@ -66,7 +66,7 @@ export default function Tareas() {
     const tarea = { titulo: nuevaTarea, descripcion };
 
     try {
-      const res = await fetch("http://localhost:5000/api/tareas", {
+      const res = await fetch("https://proyecto-nose-backend.onrender.com/api/tareas", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -99,7 +99,7 @@ export default function Tareas() {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/tareas/${id}`, {
+      const res = await fetch(`https://proyecto-nose-backend.onrender.com/api/tareas/${id}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${token}`, // ✅ enviamos token
@@ -140,7 +140,7 @@ export default function Tareas() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5000/api/tareas/${id}`, {
+      const res = await fetch(`https://proyecto-nose-backend.onrender.com/api/tareas/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

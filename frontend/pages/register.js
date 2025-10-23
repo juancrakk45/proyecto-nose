@@ -8,7 +8,8 @@ export default function Register() {
   const [mensaje, setMensaje] = useState("");
   const router = useRouter(); // 👈 Inicializar
 
-  const API_URL = "http://localhost:5000/api/usuarios/registro";
+  const API_URL = "https://proyecto-nose-backend.onrender.com/api/usuarios/registro";
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();

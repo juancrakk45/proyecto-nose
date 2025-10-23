@@ -7,7 +7,8 @@ export default function Login() {
   const [mensaje, setMensaje] = useState("");
   const router = useRouter(); // 👈 Inicializar
 
-  const API_URL = "http://localhost:5000/api/usuarios/login";
+  const API_URL = "https://proyecto-nose-backend.onrender.com/api/usuarios/login";
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
