@@ -1,6 +1,6 @@
 import requests
-
-BASE_URL = "http://localhost:5000/api/usuarios"
+BASE_URL = "https://tu-backend-desplegado.onrender.com/api/usuarios"
+#BASE_URL = "http://localhost:5000/api/usuarios"
 
 def test_listar_usuarios():
     response = requests.get(BASE_URL)

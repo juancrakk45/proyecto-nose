@@ -1,6 +1,6 @@
 import requests
-
-BASE_URL = "http://localhost:5000/api/tareas"
+BASE_URL = "https://tu-backend-desplegado.onrender.com/api/tareas"
+#BASE_URL = "http://localhost:5000/api/tareas"
 
 def test_obtener_tareas():
     response = requests.get(BASE_URL)
